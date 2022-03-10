@@ -1,0 +1,4 @@
+Pillow
+PyAutoGUI
+keyboard
+numpy
