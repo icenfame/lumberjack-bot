@@ -1,93 +1,118 @@
+"""Automation module"""
 import pyautogui
-import keyboard
 import numpy as np
+import keyboard
 
-def detectGame():
-  screen = pyautogui.screenshot()
-  button = pyautogui.locateOnScreen('regions/buttons/play.png') or \
-           pyautogui.locateOnScreen('regions/buttons/replay.png') or \
-           pyautogui.locateOnScreen('regions/buttons/left.png')
 
-  canvasWidth = 600
+def detect_game():
+    """Detect game on screen"""
 
-  # Left
-  for left in range(button.left.item(), 0, -1):
-    if screen.getpixel((left - 1, button.top.item())) != (255, 255, 255):
-      gameX = left
-      break;
+    screen = pyautogui.screenshot()
+    button = (
+        pyautogui.locateOnScreen('regions/buttons/play.png') or
+        pyautogui.locateOnScreen('regions/buttons/replay.png') or
+        pyautogui.locateOnScreen('regions/buttons/left.png')
+    )
 
-  # Right
-  if screen.getpixel((gameX + canvasWidth - 1, button.top.item())) == (255, 255, 255):
-    gameW = canvasWidth
+    canvas_width = 600
+    white = (255, 255, 255)
+    background = (51, 51, 51)
+    blue = (211, 247, 255)
 
-  # Top
-  for top in range(button.top.item(), 0, -1):
-    if screen.getpixel((gameX - 1, top - 1)) != (51, 51, 51) and screen.getpixel((gameX, top + 1)) == (211, 247, 255):
-      gameY = top;
-      break;
+    # Left
+    for left in range(button.left.item(), 0, -1):
+        if screen.getpixel((left - 1, button.top.item())) != white:
+            game_x = left
+            break
 
-  # Bottom
-  for bottom in range(button.top.item(), screen.height, 1):
-    if screen.getpixel((gameX, bottom)) != (255, 255, 255):
-      gameH = bottom - gameY
-      break;
+    # Right
+    if screen.getpixel((game_x + canvas_width - 1, button.top.item())) == white:
+        game_w = canvas_width
 
-  return (gameX, gameY, gameW, gameH)
+    # Top
+    for top in range(button.top.item(), 0, -1):
+        if (screen.getpixel((game_x - 1, top - 1)) != background and
+                screen.getpixel((game_x, top + 1)) == blue):
+            game_y = top
+            break
+
+    # Bottom
+    for bottom in range(button.top.item(), screen.height, 1):
+        if screen.getpixel((game_x, bottom)) != white:
+            game_h = bottom - game_y
+            break
+
+    return (game_x, game_y, game_w, game_h)
+
 
 def screenshot(region):
-  img = pyautogui.screenshot(region=region)
-  # img.save("screen.png")
-  return img
+    """Make screenshot of specific region"""
 
-def checkPlayer(region, img):
-  headX = 240
-  headY = 388
-  headColor = (51, 93, 101)
+    img = pyautogui.screenshot(region=region)
+    return img
 
-  if img.getpixel((headX, region[3] - headY)) == headColor:
-    return "left"
-  elif img.getpixel((region[2] - headX, region[3] - headY)) == headColor:
-    return "right"
-  else:
-    exit("Player not found")
 
-def checkWood(region, img, player):
-  woodY = region[3] - 498 # +100 to +2up
-  woodW = 32
-  woodH = 100
+def check_player(region, img):
+    """Check player position by the head"""
 
-  if player == "left":
-    woodX = 230
-  elif player == "right":
-    woodX = region[2] - 230 - woodW
+    head_x = 240
+    head_y = 388
+    head_color = (51, 93, 101)
 
-  img = img.crop((woodX, woodY, woodX + woodW, woodY + woodH))
-  arr = np.array(img)
-  arr = arr.reshape((-1, 3))
+    if img.getpixel((head_x, region[3] - head_y)) == head_color:
+        return "left"
+    elif img.getpixel((region[2] - head_x, region[3] - head_y)) == head_color:
+        return "right"
+    else:
+        exit("Player not found")
 
-  if [126, 173, 79] in arr:
-    return player
+
+def check_wood(region, img, player):
+    """Check wood over the player head"""
+
+    wood_y = region[3] - 498
+    wood_w = 32
+    wood_h = 100
+
+    if player == "left":
+        wood_x = 230
+    elif player == "right":
+        wood_x = region[2] - 230 - wood_w
+
+    # TODO find all woods by pixel
+
+    img = img.crop((wood_x, wood_y, wood_x + wood_w, wood_y + wood_h))
+    arr = np.array(img)
+    arr = arr.reshape((-1, 3))
+
+    if [126, 173, 79] in arr:
+        return player
+
 
 def main():
-  region = detectGame()
+    """Main function"""
+    region = detect_game()
 
-  while True:
-    if keyboard.is_pressed('esc'):
-      break;
+    # TODO auto start game & end if lost
 
-    img = screenshot(region)
-    player = checkPlayer(region, img)
-    wood = checkWood(region, img, player)
+    while True:
+        if keyboard.is_pressed('esc'):
+            break
 
-    if player == "left" and wood == "left":
-      pyautogui.press("right")
-      pyautogui.press("right")
-    elif player == "right" and wood == "right":
-      pyautogui.press("left")
-      pyautogui.press("left")
-    else:
-      pyautogui.press(player)
-      pyautogui.press(player)
+        img = screenshot(region)
+        player = check_player(region, img)
+        wood = check_wood(region, img, player)
+
+        if player == wood == "left":
+            pyautogui.press("right")
+            pyautogui.press("right")
+        elif player == wood == "right":
+            pyautogui.press("left")
+            pyautogui.press("left")
+        else:
+            pyautogui.press(player)
+            pyautogui.press(player)
+
 
 if __name__ == "__main__":
-  main()
+    main()
