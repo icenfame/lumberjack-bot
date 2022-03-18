@@ -14,5 +14,5 @@
 
 - Make sure you have Python 3.
 - Install dependencies: `pip install -r requirements.txt`
-- Open game (https://tbot.xyz/lumber/) and run: `py bot.py`
+- Open the game (https://tbot.xyz/lumber/) and run: `py bot.py`
 - Please DO NOT place any windows in front of the game except the game background.
