@@ -2,12 +2,11 @@
 import sys
 from time import sleep
 import pyautogui
-import numpy as np
 import keyboard
 
 
 def detect_game():
-    """Detect game on screen"""
+    """Detect game on a screen"""
 
     screen = pyautogui.screenshot()
     button = (
@@ -73,28 +72,18 @@ def check_player(region, img):
     return None
 
 
-def check_branch(region, img, player):
-    """Check branch over the player head"""
+def check_branch(region, img, player, offset_y):
+    """Check a branch on a screen"""
 
-    branch_y = region[3] - 498
-    branch_w = 32
-    branch_h = 100
-    branch_color = (126, 173, 79)
+    branch_y = region[3] - 399
+    branch_color = (136, 99, 50)
 
     if player == "left":
-        branch_x = 230
+        branch_x = 240
     elif player == "right":
-        branch_x = region[2] - 230 - branch_w
+        branch_x = region[2] - 240
 
-    img = img.crop((branch_x, branch_y, branch_x +
-                    branch_w, branch_y + branch_h))
-    arr = np.array(img)
-    arr = arr.reshape((-1, 3))
-
-    if branch_color in arr:
-        return player
-
-    return None
+    return img.getpixel((branch_x, branch_y - (100 * offset_y))) == branch_color
 
 
 def play(region):
@@ -109,18 +98,22 @@ def play(region):
         pyautogui.click(play_button)
 
     pyautogui.click(region)
+    sleep(1)
 
 
 def main():
     """Main function"""
 
+    pyautogui.PAUSE = 1 / 60
+
     region = detect_game()
     score = 0
 
     play(region)
-    sleep(1)
 
     while True:
+        sleep(0.2)
+
         if keyboard.is_pressed('esc'):
             sys.exit("[INFO]: User ESC exit")
 
@@ -129,23 +122,23 @@ def main():
 
         if not player:
             if score > 0:
-                print("[INFO]: Score", score - 2)
+                print(f"[INFO]: Score {score}")
 
             break
 
-        branch = check_branch(region, img, player)
+        for offset_y in range(6):
+            if check_branch(region, img, player, offset_y):
+                if player == "left":
+                    pyautogui.press("right")
+                    pyautogui.press("right")
+                elif player == "right":
+                    pyautogui.press("left")
+                    pyautogui.press("left")
+            else:
+                pyautogui.press(player)
+                pyautogui.press(player)
 
-        if player == branch == "left":
-            pyautogui.press("right")
-            pyautogui.press("right")
-        elif player == branch == "right":
-            pyautogui.press("left")
-            pyautogui.press("left")
-        else:
-            pyautogui.press(player)
-            pyautogui.press(player)
-
-        score += 2
+        score += 12
 
 
 if __name__ == "__main__":
