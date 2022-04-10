@@ -1,2 +1,3 @@
 PyAutoGUI
+Pillow
 keyboard
