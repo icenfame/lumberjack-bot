@@ -3,7 +3,6 @@
 ## 🔴 Current max score: 948!
 
 - You can experiment with `pyautogui.PAUSE` and `sleep` to get different results.
-- And we can make it better! You are welcome to contribute!
 
 ## 🟢 Main features:
 
